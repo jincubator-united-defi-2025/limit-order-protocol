@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../interfaces/IOrderMixin.sol";
 import "../interfaces/IAmountGetter.sol";
@@ -23,29 +23,34 @@ contract ChainlinkCalculator is IAmountGetter {
 
     /// @notice Calculates price of token A relative to token B. Note that order is important
     /// @return result Token A relative price times amount
-    function doublePrice(AggregatorV3Interface oracle1, AggregatorV3Interface oracle2, int256 decimalsScale, uint256 amount) external view returns(uint256 result) {
+    function doublePrice(
+        AggregatorV3Interface oracle1,
+        AggregatorV3Interface oracle2,
+        int256 decimalsScale,
+        uint256 amount
+    ) external view returns (uint256 result) {
         return _doublePrice(oracle1, oracle2, decimalsScale, amount);
     }
 
     function getMakingAmount(
-        IOrderMixin.Order calldata /* order */,
-        bytes calldata /* extension */,
-        bytes32 /* orderHash */,
-        address /* taker */,
+        IOrderMixin.Order calldata, /* order */
+        bytes calldata, /* extension */
+        bytes32, /* orderHash */
+        address, /* taker */
         uint256 takingAmount,
-        uint256 /* remainingMakingAmount */,
+        uint256, /* remainingMakingAmount */
         bytes calldata extraData
     ) external view returns (uint256) {
         return _getSpreadedAmount(takingAmount, extraData);
     }
 
     function getTakingAmount(
-        IOrderMixin.Order calldata /* order */,
-        bytes calldata /* extension */,
-        bytes32 /* orderHash */,
-        address /* taker */,
+        IOrderMixin.Order calldata, /* order */
+        bytes calldata, /* extension */
+        bytes32, /* orderHash */
+        address, /* taker */
         uint256 makingAmount,
-        uint256 /* remainingMakingAmount */,
+        uint256, /* remainingMakingAmount */
         bytes calldata extraData
     ) external view returns (uint256) {
         return _getSpreadedAmount(makingAmount, extraData);
@@ -58,7 +63,7 @@ contract ChainlinkCalculator is IAmountGetter {
     /// and inverse=true means that we request ETH price in DAI
     /// The useDoublePrice flag is set when needs price for two custom tokens (other than ETH or USD)
     /// @return Amount * spread * oracle price
-    function _getSpreadedAmount(uint256 amount, bytes calldata blob) internal view returns(uint256) {
+    function _getSpreadedAmount(uint256 amount, bytes calldata blob) internal view returns (uint256) {
         bytes1 flags = bytes1(blob[:1]);
         if (flags & _DOUBLE_PRICE_FLAG == _DOUBLE_PRICE_FLAG) {
             AggregatorV3Interface oracle1 = AggregatorV3Interface(address(bytes20(blob[1:21])));
@@ -80,7 +85,12 @@ contract ChainlinkCalculator is IAmountGetter {
         }
     }
 
-    function _doublePrice(AggregatorV3Interface oracle1, AggregatorV3Interface oracle2, int256 decimalsScale, uint256 amount) internal view returns(uint256 result) {
+    function _doublePrice(
+        AggregatorV3Interface oracle1,
+        AggregatorV3Interface oracle2,
+        int256 decimalsScale,
+        uint256 amount
+    ) internal view returns (uint256 result) {
         if (oracle1.decimals() != oracle2.decimals()) revert DifferentOracleDecimals();
 
         {

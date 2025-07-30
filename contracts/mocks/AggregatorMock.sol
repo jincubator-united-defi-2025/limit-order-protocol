@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV2V3Interface.sol";
 
 /// @title Mock oracle that always returns specified token price
 contract AggregatorMock is AggregatorV2V3Interface {
@@ -29,13 +29,7 @@ contract AggregatorMock is AggregatorV2V3Interface {
     function getRoundData(uint80 _roundId)
         external
         view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         if (_roundId != 0) revert NoDataPresent();
         return latestRoundData();
@@ -44,13 +38,7 @@ contract AggregatorMock is AggregatorV2V3Interface {
     function latestRoundData()
         public
         view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         // solhint-disable-next-line not-rely-on-time
         return (0, _ANSWER, block.timestamp - 100, block.timestamp - 100, 0);
