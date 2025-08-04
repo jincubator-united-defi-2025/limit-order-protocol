@@ -367,15 +367,16 @@ abstract contract OrderMixin is
                 listener = address(bytes20(data));
                 data = data[20:];
             }
-            // approve the listener to spend the maker asset
-            IERC20(order.makerAsset.get()).approve(address(listener), makingAmount);
             IPreInteraction(listener).preInteraction(
                 order, extension, orderHash, msg.sender, makingAmount, takingAmount, remainingMakingAmount, data
             );
         }
+        // TODO: replace hardcoded TychoSwapExecutorAddress with an approved list of addresses that are allowed to settle tokens
+        // For Tycho, we don't need to transfer tokens from maker to taker, because Tycho will do it for us
+        address TychoSwapExecutorAddress = 0xD16d567549A2a2a2005aEACf7fB193851603dd70;
+        if (address(bytes20(interaction)) != TychoSwapExecutorAddress) {
+            // Maker => Taker
 
-        // Maker => Taker
-        {
             bool needUnwrap = order.makerAsset.get() == address(_WETH) && takerTraits.unwrapWeth();
             address receiver = needUnwrap ? address(this) : target;
             if (order.makerTraits.usePermit2()) {
@@ -392,7 +393,6 @@ abstract contract OrderMixin is
                 _WETH.safeWithdrawTo(makingAmount, target);
             }
         }
-
         if (interaction.length > 19) {
             // proceed only if interaction length is enough to store address
             ITakerInteraction(address(bytes20(interaction))).takerInteraction(
